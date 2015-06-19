@@ -1,20 +1,9 @@
 require_relative 'utils'
 require 'byebug'
 
-FOUR = 4
-BLOCK = FOUR*FOUR
-
-PAIR_1 = (0..1)
-PAIR_2 = (1..2)
-PAIR_3 = (2..3)
-
-SET_L = (0..2)
-SET_R = (1..3)
-
-MID  = 1
-MID2 = (1..2)
 
 class Wasd2048
+  FOUR = 4
   @board
 
   def initialize
@@ -27,27 +16,17 @@ class Wasd2048
     @before_stack = Marshal.load( Marshal.dump(@board) )
 
     @board.map do |arr|
-      arr[PAIR_1] = marry(arr[PAIR_1])
-      arr[PAIR_2] = marry(arr[PAIR_2])
-      arr[PAIR_3] = marry(arr[PAIR_3])
+      arr.replace push_aside(arr)
 
-      arr[SET_L] = marry(arr[SET_L])
-      arr[SET_R] = marry(arr[SET_R])
+      arr[0..1] = sum_or_skip(arr[0..1])
+      arr[1..2] = sum_or_skip(arr[1..2])
+      arr[2..3] = sum_or_skip(arr[2..3])
 
-      arr.replace(marry(arr))
-
-      len = arr.compact.size
-      arr.compact! unless len == FOUR
-      (FOUR - len).times { arr << nil }
+      arr.replace push_aside(arr)
     end
 
     new_num_popup?(@simulation)
     @board
-  end
-
-  def new_num_popup?(skip = false)
-    return if skip == true
-    @before_stack == @board ? false : new_num_popup!
   end
 
   def stack_to_right
@@ -73,7 +52,7 @@ class Wasd2048
   end
 
   def is_over?
-    return false if @board.flatten.compact.count < BLOCK
+    return false if @board.flatten.compact.count < FOUR * FOUR
     @simulation = true
     before_stack = Marshal.load( Marshal.dump(@board) )
 
@@ -91,22 +70,25 @@ class Wasd2048
     # clear_screen!
     # move_to_home!
     puts to_s
+    puts @score
     puts
   end
 
   private
 
-    def marry(pair)
-      size = pair.size
-      in_between = (1..size-2)
-      return pair if pair.none? || pair.compact.size != 2
-      return pair if size > 2 && !pair[in_between].none?
+    def push_aside(arr)
+      return arr if arr.compact.size == FOUR || arr.compact.none?
+      arr.compact + Array.new( FOUR - arr.compact.size, nil )
+    end
 
-      print_nil = size - 1
-      if pair.first == pair.last
-        pair = [pair.compact.reduce(:+)] + Array.new(print_nil, nil)
-      end
-      pair
+    def sum_or_skip(pair)
+      return pair if pair.compact.size != 2
+      pair.first == pair.last ? [pair.reduce(:+), nil] : pair
+    end
+
+    def new_num_popup?(skip = false)
+      return if skip == true
+      @before_stack == @board ? false : new_num_popup!
     end
 
     def horrizontal_mirror!
@@ -126,7 +108,7 @@ class Wasd2048
 
     def new_num_popup!
       loop do
-        xy = rand(BLOCK).divmod(FOUR)
+        xy = rand(FOUR*FOUR).divmod(FOUR)
         break if @board[xy[0]][xy[1]].nil? && @board[xy[0]][xy[1]] = two_or_four
       end
     end
@@ -150,7 +132,7 @@ while true
 
   input = gets.chomp
 
-  case input.downcase[0]
+  case input.downcase[-1]
   when 'w'
     game.stack_to_top
   when 'a'
