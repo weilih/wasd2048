@@ -27,14 +27,14 @@ class Wasd2048
     before_stack = Marshal.load( Marshal.dump(@board) )
 
     @board.map do |arr|
-      arr[PAIR_1] = no_gap_sum(arr[PAIR_1])
-      arr[PAIR_2] = no_gap_sum(arr[PAIR_2])
-      arr[PAIR_3] = no_gap_sum(arr[PAIR_3])
+      arr[PAIR_1] = marry(arr[PAIR_1])
+      arr[PAIR_2] = marry(arr[PAIR_2])
+      arr[PAIR_3] = marry(arr[PAIR_3])
 
-      arr[SET_L] = one_gap_sum(arr[SET_L])
-      arr[SET_R] = one_gap_sum(arr[SET_R])
+      arr[SET_L] = marry(arr[SET_L])
+      arr[SET_R] = marry(arr[SET_R])
 
-      arr.replace(two_gap_sum(arr))
+      arr.replace(marry(arr))
 
       len = arr.compact.size
       arr.compact! unless len == FOUR
@@ -78,32 +78,25 @@ class Wasd2048
   end
 
   def show
-    # clear_screen!
-    # move_to_home!
-    # debugger
+    clear_screen!
+    move_to_home!
     puts to_s
     puts
   end
 
   private
 
-    def no_gap_sum(duet)
-      return duet if duet.none?
-      duet.first == duet.last ? [duet.reduce(:+), nil] : duet
-    end
+    def marry(pair)
+      size = pair.size
+      in_between = (1..size-2)
+      return pair if pair.none? || pair.compact.size != 2
+      return pair if size > 2 && !pair[in_between].none?
 
-    def one_gap_sum(trio)
-      return trio if trio.none? || !trio[MID].nil?
-      trio = trio.map { |no| no.nil? ? 0 : no }
-      trio = trio.first == trio.last ? [trio.reduce(:+), nil, nil] : trio
-      trio.map { |no| no == 0 ? nil : no }
-    end
-
-    def two_gap_sum(quad)
-      return quad if quad.none? || !quad[MID2].none?
-      quad = quad.map { |no| no.nil? ? 0 : no }
-      quad = quad.first == quad.last ? [quad.reduce(:+), nil, nil, nil] : quad
-      quad.map { |no| no == 0 ? nil : no }
+      print_nil = size - 1
+      if pair.first == pair.last
+        pair = [pair.compact.reduce(:+)] + Array.new(print_nil, nil)
+      end
+      pair
     end
 
     def horrizontal_mirror!
@@ -151,9 +144,9 @@ while true
     game.stack_to_top
   when 'a'
     game.stack_to_left
-  when 'r'
-    game.stack_to_bottom
   when 's'
+    game.stack_to_bottom
+  when 'd'
     game.stack_to_right
   when 'q'
     break
