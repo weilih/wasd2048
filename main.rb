@@ -2,7 +2,7 @@ require_relative 'utils'
 require 'byebug'
 
 FOUR = 4
-BLOCK = 16
+BLOCK = FOUR*FOUR
 
 PAIR_1 = (0..1)
 PAIR_2 = (1..2)
@@ -34,7 +34,7 @@ class Wasd2048
       arr[SET_L] = one_gap_sum(arr[SET_L])
       arr[SET_R] = one_gap_sum(arr[SET_R])
 
-      arr        = two_gap_sum(arr)
+      arr.replace(two_gap_sum(arr))
 
       len = arr.compact.size
       arr.compact! unless len == FOUR
@@ -100,7 +100,7 @@ class Wasd2048
     end
 
     def two_gap_sum(quad)
-      return quad if quad.none? || !quad[MID2].nil?
+      return quad if quad.none? || !quad[MID2].none?
       quad = quad.map { |no| no.nil? ? 0 : no }
       quad = quad.first == quad.last ? [quad.reduce(:+), nil, nil, nil] : quad
       quad.map { |no| no == 0 ? nil : no }
