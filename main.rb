@@ -24,7 +24,7 @@ class Wasd2048
   end
 
   def stack_to_left
-    before_stack = Marshal.load( Marshal.dump(@board) )
+    @before_stack = Marshal.load( Marshal.dump(@board) )
 
     @board.map do |arr|
       arr[PAIR_1] = marry(arr[PAIR_1])
@@ -41,7 +41,13 @@ class Wasd2048
       (FOUR - len).times { arr << nil }
     end
 
-    new_num_popup! unless before_stack == @board
+    new_num_popup?(@simulation)
+    @board
+  end
+
+  def new_num_popup?(skip = false)
+    return if skip == true
+    @before_stack == @board ? false : new_num_popup!
   end
 
   def stack_to_right
@@ -68,18 +74,22 @@ class Wasd2048
 
   def is_over?
     return false if @board.flatten.compact.count < BLOCK
-
+    @simulation = true
     before_stack = Marshal.load( Marshal.dump(@board) )
-    return false if stack_to_left && before_stack != @board
-    return false if stack_to_right && before_stack != @board
-    return false if stack_to_top && before_stack != @board
-    return false if stack_to_bottom && before_stack != @board
-    return true
+
+    if stack_to_left != before_stack || stack_to_right != before_stack ||
+     stack_to_bottom != before_stack || stack_to_top   != before_stack
+      @board = before_stack
+      @simulation = false
+      return false
+    else
+      return true
+    end
   end
 
   def show
-    clear_screen!
-    move_to_home!
+    # clear_screen!
+    # move_to_home!
     puts to_s
     puts
   end
@@ -137,6 +147,7 @@ game = Wasd2048.new
 game.show
 
 while true
+
   input = gets.chomp
 
   case input.downcase[0]
@@ -144,9 +155,9 @@ while true
     game.stack_to_top
   when 'a'
     game.stack_to_left
-  when 's'
+  when 'r'
     game.stack_to_bottom
-  when 'd'
+  when 's'
     game.stack_to_right
   when 'q'
     break
