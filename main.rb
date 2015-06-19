@@ -2,6 +2,7 @@ require_relative 'utils'
 require 'byebug'
 
 FOUR = 4
+BLOCK = 16
 
 PAIR_1 = (0..1)
 PAIR_2 = (1..2)
@@ -61,6 +62,21 @@ class Wasd2048
     anticlock_rotate!
   end
 
+  def has_2048?
+    !!@board.flatten.find { |f| f == 2048 }
+  end
+
+  def is_over?
+    return false if @board.flatten.compact.count < BLOCK
+
+    before_stack = Marshal.load( Marshal.dump(@board) )
+    return false if stack_to_left && before_stack != @board
+    return false if stack_to_right && before_stack != @board
+    return false if stack_to_top && before_stack != @board
+    return false if stack_to_bottom && before_stack != @board
+    return true
+  end
+
   def show
     # clear_screen!
     # move_to_home!
@@ -107,7 +123,7 @@ class Wasd2048
 
     def new_num_popup!
       loop do
-        xy = rand(16).divmod(FOUR)
+        xy = rand(BLOCK).divmod(FOUR)
         break if @board[xy[0]][xy[1]].nil? && @board[xy[0]][xy[1]] = two_or_four
       end
     end
@@ -122,22 +138,15 @@ class Wasd2048
       end
       str.join("\n")
     end
-
-    def trans_s
-      str = @board.transpose.map do |arr|
-        arr.map { |chr| "____#{chr}"[-4..-1] }.join('|')
-      end
-      str.join("\n")
-    end
 end
 
 game = Wasd2048.new
+game.show
 
 while true
-  game.show
   input = gets.chomp
-  debugger
-  case input.downcase
+
+  case input.downcase[0]
   when 'w'
     game.stack_to_top
   when 'a'
@@ -151,6 +160,13 @@ while true
   else
     puts 'W(up)-A(left)-S(down)-D(right)-Q(quit)'
   end
-end
+  game.show
 
-game.show
+  if game.has_2048?
+    puts 'YOU WIN'
+    break
+  elsif game.is_over?
+    puts 'YOU LOSE'
+    break
+  end
+end
