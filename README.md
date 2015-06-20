@@ -11,5 +11,5 @@ Controls:
 
 execute main.rb to play
 ```
-ruby main.rb
+$ ruby main.rb
 ```
