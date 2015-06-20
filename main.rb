@@ -1,10 +1,7 @@
 require_relative 'utils'
-require 'byebug'
-
 
 class Wasd2048
   FOUR = 4
-  @board
 
   def initialize
     @board = Array.new(FOUR) { Array.new(FOUR) }
@@ -17,11 +14,7 @@ class Wasd2048
 
     @board.map do |arr|
       arr.replace push_aside(arr)
-
-      arr[0..1] = sum_or_skip(arr[0..1])
-      arr[1..2] = sum_or_skip(arr[1..2])
-      arr[2..3] = sum_or_skip(arr[2..3])
-
+      (0...FOUR).map { |idx| arr[idx..idx+1] = sum_or_skip(arr[idx..idx+1]) }
       arr.replace push_aside(arr)
     end
 
@@ -53,9 +46,9 @@ class Wasd2048
 
   def is_over?
     return false if @board.flatten.compact.count < FOUR * FOUR
-    @simulation = true
     before_stack = Marshal.load( Marshal.dump(@board) )
 
+    @simulation = true
     if stack_to_left != before_stack || stack_to_right != before_stack ||
      stack_to_bottom != before_stack || stack_to_top   != before_stack
       @board = before_stack
@@ -67,10 +60,9 @@ class Wasd2048
   end
 
   def show
-    # clear_screen!
-    # move_to_home!
+    clear_screen!
+    move_to_home!
     puts to_s
-    puts @score
     puts
   end
 
@@ -87,7 +79,7 @@ class Wasd2048
     end
 
     def new_num_popup?(skip = false)
-      return if skip == true
+      return nil if skip == true
       @before_stack == @board ? false : new_num_popup!
     end
 
@@ -131,15 +123,14 @@ game.show
 while true
 
   input = gets.chomp
-
   case input.downcase[-1]
   when 'w'
     game.stack_to_top
   when 'a'
     game.stack_to_left
-  when 'r'
-    game.stack_to_bottom
   when 's'
+    game.stack_to_bottom
+  when 'd'
     game.stack_to_right
   when 'q'
     break
